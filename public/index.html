@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AirShare — Local Wi-Fi File Sharing</title>
+  <meta name="description" content="Fast, seamless file sharing across your local Wi-Fi network. Upload, preview, and download files directly to and from your laptop.">
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Phosphor Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Ambient background glow elements -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <div class="app-layout">
+    <!-- Navbar / Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="brand-logo">
+          <div class="logo-icon">
+            <i class="ph-fill ph-broadcast"></i>
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">AirShare</span>
+            <span class="brand-subtitle">Laptop LAN Hub</span>
+          </div>
+        </div>
+
+        <div class="network-badge" id="networkBadge" title="Click to copy sharing URL">
+          <span class="status-dot"></span>
+          <span class="network-label">Wi-Fi:</span>
+          <span class="network-url" id="networkUrlDisplay">Detecting...</span>
+          <i class="ph ph-copy copy-icon"></i>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="storage-pill" id="storagePill">
+          <i class="ph ph-hard-drive"></i>
+          <span id="storageStats">0 files (0 B)</span>
+        </div>
+
+        <button class="btn btn-secondary" id="qrBtn" title="Show QR Code for phones">
+          <i class="ph ph-qr-code"></i>
+          <span>Connect Phone</span>
+        </button>
+
+        <button class="btn btn-primary" id="downloadAllBtn" title="Download all files as ZIP">
+          <i class="ph ph-file-zip"></i>
+          <span>Download All (.zip)</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="main-container">
+      
+      <!-- Upload Drop Zone Section -->
+      <section class="upload-section">
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" multiple style="display: none;">
+          
+          <div class="drop-zone-content">
+            <div class="upload-icon-wrapper">
+              <i class="ph-fill ph-cloud-arrow-up upload-icon"></i>
+            </div>
+            <h2 class="upload-heading">Drop files here to share across Wi-Fi</h2>
+            <p class="upload-subtext">
+              or <button type="button" class="browse-link" id="browseBtn">browse files</button> from your laptop or phone
+            </p>
+            <div class="upload-features">
+              <span class="feature-tag"><i class="ph ph-lightning"></i> Fast Direct LAN Transfer</span>
+              <span class="feature-tag"><i class="ph ph-files"></i> Multiple Files</span>
+              <span class="feature-tag"><i class="ph ph-eye"></i> Instant In-Browser Preview</span>
+            </div>
+          </div>
+
+          <!-- Active Uploading Progress Overlay -->
+          <div class="upload-progress-container" id="uploadProgressContainer" style="display: none;">
+            <div class="progress-header">
+              <div class="progress-title-group">
+                <i class="ph ph-circle-notch spinner-icon"></i>
+                <span class="progress-title" id="progressTitle">Uploading 0 files...</span>
+              </div>
+              <span class="progress-percentage" id="progressPercent">0%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+            </div>
+            <div class="progress-details" id="progressDetails">
+              <span>0 MB / 0 MB</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Files Explorer Section -->
+      <section class="files-section">
+        <!-- Control Bar -->
+        <div class="controls-bar">
+          <div class="search-box">
+            <i class="ph ph-magnifying-glass search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Search shared files..." autocomplete="off">
+            <button class="clear-search-btn" id="clearSearchBtn" style="display: none;">
+              <i class="ph ph-x"></i>
+            </button>
+          </div>
+
+          <!-- Category Filter Pills -->
+          <div class="category-filters" id="categoryFilters">
+            <button class="filter-pill active" data-category="all">
+              <i class="ph ph-squares-four"></i> All <span class="badge" id="countAll">0</span>
+            </button>
+            <button class="filter-pill" data-category="image">
+              <i class="ph ph-image"></i> Photos <span class="badge" id="countImage">0</span>
+            </button>
+            <button class="filter-pill" data-category="video">
+              <i class="ph ph-video"></i> Videos <span class="badge" id="countVideo">0</span>
+            </button>
+            <button class="filter-pill" data-category="audio">
+              <i class="ph ph-music-notes"></i> Audio <span class="badge" id="countAudio">0</span>
+            </button>
+            <button class="filter-pill" data-category="pdf">
+              <i class="ph ph-file-pdf"></i> PDFs <span class="badge" id="countPdf">0</span>
+            </button>
+            <button class="filter-pill" data-category="document">
+              <i class="ph ph-file-text"></i> Docs <span class="badge" id="countDocument">0</span>
+            </button>
+            <button class="filter-pill" data-category="code">
+              <i class="ph ph-code"></i> Code <span class="badge" id="countCode">0</span>
+            </button>
+            <button class="filter-pill" data-category="archive">
+              <i class="ph ph-archive"></i> Archives <span class="badge" id="countArchive">0</span>
+            </button>
+          </div>
+
+          <!-- Layout & Sorting Options -->
+          <div class="actions-group">
+            <div class="sort-wrapper">
+              <i class="ph ph-sort-ascending"></i>
+              <select id="sortSelect" class="sort-select">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="name">Name (A-Z)</option>
+                <option value="size-desc">Size (Largest)</option>
+                <option value="size-asc">Size (Smallest)</option>
+              </select>
+            </div>
+
+            <div class="view-toggle">
+              <button class="view-btn active" id="viewGridBtn" title="Grid View">
+                <i class="ph ph-grid-four"></i>
+              </button>
+              <button class="view-btn" id="viewListBtn" title="List View">
+                <i class="ph ph-list-bullets"></i>
+              </button>
+            </div>
+
+            <button class="btn btn-icon" id="refreshBtn" title="Refresh files list">
+              <i class="ph ph-arrows-clockwise"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Files Container (Grid or List) -->
+        <div class="files-container view-grid" id="filesContainer">
+          <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+          <div class="empty-icon-wrapper">
+            <i class="ph ph-folder-dashed"></i>
+          </div>
+          <h3 class="empty-title">No files shared yet</h3>
+          <p class="empty-desc">Drop files above or click browse to start sharing from your laptop with any connected phone or PC.</p>
+        </div>
+
+        <!-- Search No Results State -->
+        <div class="empty-state" id="noSearchResults" style="display: none;">
+          <div class="empty-icon-wrapper">
+            <i class="ph ph-file-x"></i>
+          </div>
+          <h3 class="empty-title">No matching files found</h3>
+          <p class="empty-desc">Try searching for a different keyword or change the category filter.</p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-info">
+        <span>AirShare Server • Running on your laptop</span>
+        <span class="footer-separator">•</span>
+        <span id="footerHostInfo">Local Wi-Fi Network</span>
+      </div>
+      <div class="footer-tip">
+        <i class="ph ph-info"></i> Any phone or laptop connected to this Wi-Fi can open the sharing URL directly.
+      </div>
+    </footer>
+  </div>
+
+  <!-- QR Code Modal (Connect Phone) -->
+  <div class="modal-overlay" id="qrModal" style="display: none;">
+    <div class="modal-card qr-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <i class="ph-fill ph-device-mobile-camera modal-icon"></i>
+          <div>
+            <h3 class="modal-title">Connect Phone / Tablet</h3>
+            <p class="modal-subtitle">Scan to open AirShare without typing IP addresses</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="closeQrModalBtn">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+
+      <div class="qr-content-wrapper">
+        <div class="qr-code-frame">
+          <img id="qrCodeImg" src="" alt="AirShare Wi-Fi QR Code" class="qr-code-image">
+        </div>
+        <div class="qr-instructions">
+          <div class="instruction-step">
+            <span class="step-num">1</span>
+            <span>Make sure your phone is connected to the <strong>same Wi-Fi</strong>.</span>
+          </div>
+          <div class="instruction-step">
+            <span class="step-num">2</span>
+            <span>Open your phone's <strong>Camera app</strong> and point at the QR code.</span>
+          </div>
+          <div class="instruction-step">
+            <span class="step-num">3</span>
+            <span>Tap the banner link to upload & download files instantly!</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="qr-url-box">
+        <span class="qr-url-text" id="qrModalUrl">http://...</span>
+        <button class="btn btn-secondary btn-sm" id="copyQrUrlBtn">
+          <i class="ph ph-copy"></i> Copy Link
+        </button>
+      </div>
+
+      <div class="network-interfaces-list" id="networkInterfacesList">
+        <!-- Alternative IP addresses populated here if laptop has multiple interfaces -->
+      </div>
+    </div>
+  </div>
+
+  <!-- In-Browser File Preview Modal -->
+  <div class="modal-overlay" id="previewModal" style="display: none;">
+    <div class="modal-card preview-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="preview-type-icon" id="previewTypeIcon">
+            <i class="ph ph-file"></i>
+          </div>
+          <div class="file-info-preview">
+            <h3 class="modal-title file-name-preview" id="previewFileName">filename.ext</h3>
+            <p class="modal-subtitle file-meta-preview" id="previewFileMeta">0 MB • Uploaded recently</p>
+          </div>
+        </div>
+        
+        <div class="preview-actions">
+          <a id="previewDownloadBtn" href="#" class="btn btn-primary btn-sm" download>
+            <i class="ph ph-download-simple"></i> Download
+          </a>
+          <button class="modal-close-btn" id="closePreviewModalBtn">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="preview-body" id="previewBody">
+        <!-- Injected dynamically: image, video, audio, pdf, code viewer -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification System -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
